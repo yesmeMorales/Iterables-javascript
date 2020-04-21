@@ -1,0 +1,17 @@
+{
+  "name": "console-log-my-food",
+  "version": "1.0.0",
+  "description": "Javascript generators and Iterators",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Iterator"
+  ],
+  "author": "Yesme Morales",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.19.2"
+  }
+}
