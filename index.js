@@ -16,35 +16,22 @@ readline.on("line", async (line) => {
     case "list vegan foods":
       {
         console.log("vegan food list");
-        axios.get(`http://localhost:3001/food`).then(({ data }) => {
+        const { data } = await axios.get(`http://localhost:3001/food`);
+        function* listVeganFoods() {
           let idx = 0;
           const veganOnly = data.filter((food) => {
             return food.dietary_preferences.includes("vegan");
           });
-          const veganIterable = {
-            [Symbol.iterator]() {
-              return {
-                [Symbol.iterator]() {
-                  return this;
-                },
-                next() {
-                  const current = veganOnly[idx];
-                  idx++;
-                  if (current) {
-                    return { value: current, done: false };
-                  } else {
-                    return { value: current, done: true };
-                  }
-                },
-              };
-            },
-          };
-
-          for (let val of veganIterable) {
-            console.log(val.name);
+          while (veganOnly[idx]) {
+            yield veganOnly[idx];
+            idx++;
           }
-          readline.prompt();
-        });
+        }
+
+        for (let val of listVeganFoods()) {
+          console.log(val.name);
+        }
+        readline.prompt();
       }
       break;
     case "log":
@@ -55,7 +42,7 @@ readline.on("line", async (line) => {
         let actionIt;
         const actionIterator = {
           [Symbol.iterator]() {
-            const positions = [...this.actions];
+            let positions = [...this.actions];
             return {
               [Symbol.iterator]() {
                 return this;
@@ -95,7 +82,7 @@ readline.on("line", async (line) => {
           );
         }
 
-        function displayCalories(servingSize, food) {
+        async function displayCalories(servingSize = 1, food) {
           const calories = food.calories;
           console.log(
             `${
@@ -104,6 +91,29 @@ readline.on("line", async (line) => {
               calories * parseInt(servingSize, 10)
             ).toFixed()} calories. `
           );
+          const { data } = await axios.get(`http://localhost:3001/users/1`);
+          const usersLog = data.log || [];
+          const putBody = {
+            ...data,
+            log: [
+              ...usersLog,
+              {
+                [Date.now()]: {
+                  food: food.name,
+                  servingSize,
+                  calories: Number.parseFloat(
+                    calories * parseInt(servingSize, 10)
+                  ),
+                },
+              },
+            ],
+          };
+
+          await axios.put(`http://localhost:3001/users/1`, putBody, {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
 
           actionIt.next();
           readline.prompt();
